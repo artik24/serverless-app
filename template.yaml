@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Resources:
+  MyLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lambda-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  MyLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: my-serverless-function
+      Runtime: nodejs18.x
+      Handler: index.handler
+      Role: !GetAtt MyLambdaRole.Arn
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+             return {
+                 statusCode: 200,
+                 body: JSON.stringify({
+                     message: "Hello from Lambda"
+                 })
+             };
+          };
+
+  MyApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: my-api
+      Protocol: HTTP
+
+  MyIntegaration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref MyApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt MyLambdaFunction.Arn
+      PayloadFormatVersion: "2.0"
+
+  MyRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref MyApi
+      RouteKey: "GET /hello"
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref MyIntegaration
+
+  MyStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref MyApi
+      StageName: prod
+      AutoDeploy: true
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref MyLambdaFunction
+      Principal: apigateway.amazonaws.com
+Outputs:
+  ApiUrl:
+  Value: !Sub "https://${MyApi}.execute-api.${AWS::Region}.amazonaws.com/prod/hello"
