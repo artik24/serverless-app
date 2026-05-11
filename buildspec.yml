@@ -1,8 +1,32 @@
 version: 0.2
+
 phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+
   build:
     commands:
-      - echo "Deploying CloudFormation Stack"
+      - echo "Packaging CloudFormation template"
+
+      - aws cloudformation package \
+
+        --template-file template.yaml \
+
+        --s3-bucket sam-artifacts-demo-bucket \
+
+        --output-template-file packaged-template.yaml
+
+      - echo "Deploying stack"
+
+      - aws cloudformation deploy \
+
+        --template-file packaged-template.yaml \
+
+        --stack-name sam-demo-stack \
+
+        --capabilities CAPABILITY_IAM
+
 artifacts:
   files:
     - "**/*"
