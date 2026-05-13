@@ -30,7 +30,6 @@ Resources:
     Type: AWS::Serverless::Function
 
     Properties:
-      FunctionName: hello-function
 
       Runtime: nodejs18.x
 
