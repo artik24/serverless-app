@@ -13,7 +13,7 @@ phases:
 
         --template-file template.yaml \
 
-        --s3-bucket sam-artifacts-demo-bucket \
+        --s3-bucket serverless-sam-lambda-demo \
 
         --output-template-file packaged-template.yaml
 
@@ -23,7 +23,7 @@ phases:
 
         --template-file packaged-template.yaml \
 
-        --stack-name sam-demo-stack \
+        --stack-name sam-serverless-stack \
 
         --capabilities CAPABILITY_IAM
 
